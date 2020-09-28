@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>專案</title>
+  <link rel="stylesheet" href="{{url_for('static', filename='f1.css')}}">
+  <script src="http://www.chartjs.org/dist/2.7.2/Chart.bundle.js"></script>
+  <script src="http://www.chartjs.org/samples/latest/utils.js"></script>
+  <script src="{{url_for('static', filename='f2.js')}}"></script>
+  <script src="{{url_for('static', filename='f3.js')}}"></script>
+  <link rel="stylesheet" href="{{url_for('static', filename='f4.css')}}">
+  <script>
+  $(function() {
+    $( "#datepicker" ).datepicker({
+      changeMonth: true,
+      changeYear: true
+    });
+  });
+  $(function() {
+    $( "#date" ).datepicker({
+      changeMonth: true,
+      changeYear: true
+    });
+  });
+	var xhr = new XMLHttpRequest();
+	xhr.onreadystatechange = function()
+	{
+	    if(this.readyState == 4 && this.status == 200) {
+	        jsondata = this.responseText;
+	        changeData();
+	        console.log(jsondata);
+        }
+    }
+    xhr.open("POST", "/showPage");
+    xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+    xhr.send("");
+  </script>
+</head>
+<body>
+<p style="font-size: 4vh" align="center"><b>選擇起始日期：</b><input type="text" id="datepicker" onchange="changeData()"></p>
+<p style="font-size: 4vh" align="center" ><b>選擇結束日期：</b><input type="text" id="date" onchange="changeData()"></p>
+<p align="center">
+  <b align="center" style="font-size: 4vh">項目:</b>
+  <select id="sel" onchange="change()" style="width:20vw;height: 4vh; font-size:3vh">
+    <option style=" font-size:3vh" value="a1">請選擇</option>
+    <option style=" font-size:3vh" value="a2">停駐時間</option>
+    <option style=" font-size:3vh" value="a3">瀏覽人次</option>
+    <option style=" font-size:3vh" value="a41">左鍵點擊目標</option>
+    <option style=" font-size:3vh" value="a42">右鍵點擊目標</option>
+    <option style=" font-size:3vh" value="a43">中鍵點擊目標</option>
+    <option style=" font-size:3vh" value="a5">使用者地區</option>
+    <option style=" font-size:3vh" value="a6">使用者作業系統</option>
+    <option style=" font-size:3vh" value="a7">使用者來源頁面</option>
+    <option style=" font-size:3vh" value="a8">使用者語言</option>
+  </select>
+</p>
+<p align="center" style="font-size: 4vh"><b>圖表顯示</b></p>
+
+<div align="center">
+  <canvas id="canvas" height=200vh width=800vh></canvas>
+</div>
+ 
+</body>
+<script>
+	data = {};
+    /*var data = JSON.parse('{"useTime":{"20180517":400,"20180518":500,"20180519":500,"20180520":200},"usePeople":{"20180517":400,"20180518":500,"20180519":500,"20180520":200},"clickButton":{"like":100,"share":50,"dislike":200,"commit":78},"userLocation":{"Taipei":123,"NewTaipei":200,"Taichung":888,"ChungHua":234},"userOS":{"Windows":900,"MacOS":39,"ArchLinux":20,"CentOS":30},"userRefer":{"google.com":900,"facebook.com":200}}')*/
+    var ctx = document.getElementById('canvas').getContext('2d');
+    var pic;
+    function change() {
+        x=document.getElementById('sel')
+        switch (x.value){
+            case "a1":
+                pic.destroy();
+                break;
+            case "a2":
+                drawTime();
+                break;
+            case "a3":
+                drawPeople();
+                break;
+            case "a41":
+                drawCircle(data.leftClickOption);
+                break;
+            case "a42":
+                drawCircle(data.rightClickOption);
+                break;
+            case "a43":
+                drawCircle(data.midClickOption);
+                break;
+            case "a5":
+                drawCircle(data.userLocation.userCity);
+                break;
+            case "a6":
+                drawOS();
+                break;
+            case "a7":
+            	drawCircle(data.userComeFrom);
+                break;
+            case "a8":
+                drawCircle(data.userLanguages);
+                break;
+        }
+    }
+    function changeData(){
+    	console.log("changeData");
+    	var start = document.getElementById("datepicker").value;
+    	var end = document.getElementById("date").value;
+    	data = {}
+    	if(start == ""){
+    		start = 0;
+    	}
+    	else{
+    		start = new Date(start).getTime();
+    	}
+    	if(end == ""){
+    		end = Infinity;
+    	}
+    	else{
+    		end = new Date(end).getTime();
+    	}
+    	console.log("start = " + start + " end + " + end);
+    	jsondataTemp = JSON.parse(jsondata);
+    	for(var i in jsondataTemp["userTime"]){
+    		if(i >= start && i <= end){
+    			margeData(data, jsondataTemp["userTime"][i]);
+    		}
+    	}
+    }
+    function margeData(save, data){
+    	if (typeof(data) == "object"){
+	        for (i in data){
+	            if (!save[i]){
+	                save[i] = data[i];
+	                continue
+	            }
+	            else{
+	            	if (margeData(save[i], data[i])){
+	                    save[i] += data[i];
+	                }
+	            }
+	        }
+	        return false
+	    }
+    	if (typeof(data) == "number"){
+    		return true
+    	}
+    }
+    function drawTime(){
+        if(pic){
+            pic.destroy();
+        }
+        var tatle = {};
+        var start = document.getElementById("datepicker").value;
+    	var end = document.getElementById("date").value;
+    	if(start == ""){
+    		start = 0;
+    	}
+    	else{
+    		start = new Date(start).getTime();
+    	}
+    	if(end == ""){
+    		end = Infinity;
+    	}
+    	else{
+    		end = new Date(end).getTime();
+    	}
+        var startTemp = 0;
+        var endTemp = 0;
+        for(var i in jsondataTemp["userTime"]){
+    		if(i >= start && i <= end){
+    			var stringTemp = new Date(parseInt(i));
+    			stringTemp = stringTemp.getFullYear()+"-"+(stringTemp.getMonth()+1)+"-"+stringTemp.getUTCDate();
+
+    			if(startTemp == 0){
+    				startTemp = stringTemp;
+    			}
+    			if(!tatle[stringTemp]){
+    				tatle[stringTemp] = jsondataTemp["userTime"][i].useTime;
+    			}
+    			else{
+    				tatle[stringTemp] += jsondataTemp["userTime"][i].useTime;
+    			}
+    			endTemp = stringTemp;
+    		}
+    	}
+
+    	var i = new Date(startTemp);
+    	var endTemp = new Date(endTemp)
+    	endTemp.setUTCDate(endTemp.getUTCDate()+2);
+    	while(i <= endTemp){
+    		var tempString = i.getFullYear()+"-"+(i.getMonth()+1)+"-"+i.getUTCDate();
+    		if(!tatle[tempString]){
+    			tatle[tempString] = 0;
+    		}
+    		else{
+    			var temp = tatle[tempString];
+    			delete tatle[tempString];
+    			tatle[tempString] = temp;
+    		}
+    		i.setUTCDate(i.getUTCDate()+1);
+    	}
+
+
+        var label=[];
+        var temp=[];
+        for(var i in tatle){
+            label.push(i)
+            temp.push(tatle[i]);
+        }
+        var config = {
+			type: 'line',
+			data: {
+				labels: label,
+				datasets: [{
+					label: 'User total time',
+					backgroundColor: window.chartColors.red,
+					borderColor: window.chartColors.red,
+					data: temp,
+					fill: false,
+				}]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Total use time'
+				},
+				tooltips: {
+					mode: 'index',
+					intersect: false,
+				},
+				hover: {
+					mode: 'nearest',
+					intersect: true
+				},
+				scales: {
+					xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'day'
+						}
+					}],
+					yAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'time(second)'
+						}
+					}]
+				}
+			}
+        };
+        pic = new Chart(ctx,config);
+    }
+    function drawPeople(){
+        if(pic){
+            pic.destroy();
+        }
+
+        var tatle = {};
+        var start = document.getElementById("datepicker").value;
+    	var end = document.getElementById("date").value;
+    	if(start == ""){
+    		start = 0;
+    	}
+    	else{
+    		start = new Date(start).getTime();
+    	}
+    	if(end == ""){
+    		end = Infinity;
+    	}
+    	else{
+    		end = new Date(end).getTime();
+    	}
+        var startTemp = 0;
+        var endTemp = 0;
+        for(var i in jsondataTemp["userTime"]){
+    		if(i >= start && i <= end){
+    			var stringTemp = new Date(parseInt(i));
+    			stringTemp = stringTemp.getFullYear()+"-"+(stringTemp.getMonth()+1)+"-"+stringTemp.getUTCDate();
+
+    			if(startTemp == 0){
+    				startTemp = stringTemp;
+    			}
+    			if(!tatle[stringTemp]){
+    				tatle[stringTemp] = 1;
+    			}
+    			else{
+    				tatle[stringTemp]++;
+    			}
+    			endTemp = stringTemp;
+    		}
+    	}
+
+    	var i = new Date(startTemp);
+    	var endTemp = new Date(endTemp);
+    	endTemp.setUTCDate(endTemp.getUTCDate()+2);
+    	while(i <= endTemp){
+    		var tempString = i.getFullYear()+"-"+(i.getMonth()+1)+"-"+i.getUTCDate();
+    		if(!tatle[tempString]){
+    			tatle[tempString] = 0;
+    		}
+    		else{
+    			var temp = tatle[tempString];
+    			delete tatle[tempString];
+    			tatle[tempString] = temp;
+    		}
+    		i.setUTCDate(i.getUTCDate()+1);
+    	}
+
+
+        var label=[];
+        var temp=[];
+        for(var i in tatle){
+            label.push(i)
+            temp.push(tatle[i]);
+        }
+        var config = {
+			type: 'line',
+			data: {
+				labels: label,
+				datasets: [{
+					label: 'Use people',
+					backgroundColor: window.chartColors.red,
+					borderColor: window.chartColors.red,
+					data: temp,
+					fill: false,
+				}]
+			},
+			options: {
+				responsive: true,
+				title: {
+					display: true,
+					text: 'Total use people'
+				},
+				tooltips: {
+					mode: 'index',
+					intersect: false,
+				},
+				hover: {
+					mode: 'nearest',
+					intersect: true
+				},
+				scales: {
+					xAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'day'
+						}
+					}],
+					yAxes: [{
+						display: true,
+						scaleLabel: {
+							display: true,
+							labelString: 'person'
+						}
+					}]
+				}
+			}
+        };
+        pic = new Chart(ctx,config);
+    }
+    function drawCircle(data){
+        if(pic){
+            pic.destroy();
+        }
+        var label=[];
+        var temp=[];
+        for(var i in data){
+            label.push(i)
+            temp.push(data[i]);
+        }
+        var config = {
+			type: 'pie',
+			data: {
+				datasets: [{
+					data: temp,
+					backgroundColor: [
+						window.chartColors.red,
+						window.chartColors.orange,
+						window.chartColors.yellow,
+						window.chartColors.green,
+						window.chartColors.blue,
+                        window.chartColors.purple
+					],
+					label: 'Button'
+				}],
+				labels: label
+			},
+			options: {
+				responsive: true
+			}
+        };
+        pic = new Chart(ctx,config);
+    }
+
+</script>
+</html>

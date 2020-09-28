@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Practice AJAX</title>
+    <script type="text/javascript">
+    	var a;
+    	var obj;
+	    function do_ajax() {
+	        var xhr = new XMLHttpRequest(),
+	            result = document.querySelector("#result");
+	        xhr.open("POST", "/");
+	        xhr.setRequestHeader('content-type', 'application/x-www-form-urlencoded');
+	        xhr.onload = function () {
+	            result.innerHTML = this.response;
+	        };
+	        //xhr.send("name=" + document.getElementById('name').value);
+	        a = new Object();
+	        a["aaa"] = "a";
+	        a["bbb"] = "b";
+	        a["ccc"] = "c";
+	        obj = new Object();
+	        obj.a = a;
+
+	        xhr.send("name=" + JSON.stringify(obj));
+	    }
+    </script>
+  </head>
+  <body>
+    <form action="index" method="post">
+      <label>Name:<input type="text" id="name" value="aaa" /></label>
+      <button type="button" id="btn-post" onclick="do_ajax();">Click</button>
+      <div id="result"></div>
+    </form>
+  </body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>等一下吃什麼</title>
+	<script src="https://maps.google.com/maps/api/js?sensor=true"></script>
+    <script src="{{url_for('static', filename='event.js')}}"></script>
+</head>
+<body>
+
+	<p>
+		<select name="person">
+			<option>請選擇</option>
+			<option>請選擇</option>
+			<option>請選擇</option>
+			<option>請選擇</option>
+			<option>請選擇</option>
+		</select>
+	</p>
+
+	<button onclick="getElementById('demo').innerHTML=y_txt[index]">產生文字</button>
+	<p id="demo"></p>
+
+	<span id="" class="" style="">
+		<script type="text/javascript"> //產生隨機文字
+			y_txt = new Array(4);
+			y_txt[0] = "隨機文字";
+			y_txt[1] = "任何文字均可";
+			y_txt[2] = "可以隨機抽出文字";
+			y_txt[3] = "嗨嗨";
+			index = Math.floor(Math.random() * y_txt.length);
+		</script>
+	</span>
+	<body>
+	<div id="showbox"></div>
+
+
+	<img src="https://s3-us-west-1.amazonaws.com/niusnews-imgs/294266_1.jpg" width="1280px" height="800px" style="float: left; ">
+	<script language="JavaScript"> //時間
+	function ShowTime()
+	{
+	　document.getElementById('showbox').innerHTML = new Date();
+	　setTimeout('ShowTime()',1000);
+	}
+	ShowTime();
+	</script>
+</body>
+</html>
